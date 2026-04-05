@@ -28,3 +28,6 @@ dist-ssr
 .env
 .next/
 next-env.d.ts
+
+# Login credentials (use environment variables instead)
+logins.json

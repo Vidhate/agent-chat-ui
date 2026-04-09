@@ -14,12 +14,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read credentials from environment variable or logins.json (fallback for local dev)
-    let credentials: Record<string, string>;
+    // Read credentials from environment variables or logins.json (fallback for local dev)
+    let credentials: Record<string, string> = {};
 
-    if (process.env.AUTH_CREDENTIALS) {
-      // Production: read from environment variable
-      credentials = JSON.parse(process.env.AUTH_CREDENTIALS);
+    // Check for LOGIN_USER* environment variables
+    const envVars = Object.keys(process.env);
+    const loginUserVars = envVars.filter((key) => key.startsWith("LOGIN_USER"));
+
+    if (loginUserVars.length > 0) {
+      // Production: read from LOGIN_USER* environment variables
+      for (const varName of loginUserVars) {
+        try {
+          const userConfig = JSON.parse(process.env[varName]!);
+          if (userConfig.username && userConfig.password) {
+            credentials[userConfig.username] = userConfig.password;
+          }
+        } catch (error) {
+          console.error(`Failed to parse ${varName}:`, error);
+        }
+      }
     } else {
       // Local development: fallback to logins.json
       const loginsPath = join(process.cwd(), "logins.json");
